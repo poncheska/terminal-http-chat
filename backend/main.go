@@ -18,9 +18,9 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/signin", handlers.SignInHandler)
-	r.HandleFunc("/signup", handlers.SignUpHandler)
-	r.HandleFunc("/chat", handlers.ChatHandler)
+	r.HandleFunc("/signin", server.SignInHandler)
+	r.HandleFunc("/signup", server.SignUpHandler)
+	r.HandleFunc("/chat", server.ChatHandler)
 	log.Println("Server started")
 	log.Fatal(http.ListenAndServe(":"+port, r))
 }

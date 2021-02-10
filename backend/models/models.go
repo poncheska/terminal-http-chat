@@ -1,14 +1,5 @@
 package models
 
-import (
-	"github.com/jmoiron/sqlx"
-)
-
-type Server struct {
-	DB    sqlx.DB
-	Chats []Chat
-}
-
 type Chat struct {
 	Id int64
 	Name string
