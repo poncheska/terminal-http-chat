@@ -2,7 +2,7 @@ package store
 
 import (
 	"fmt"
-"github.com/jmoiron/sqlx"
+	"github.com/jmoiron/sqlx"
 	"github.com/poncheska/terminal-http-chat/backend/pkg/models"
 )
 
@@ -14,10 +14,6 @@ func NewMessageStore(db *sqlx.DB) *MessageStore {
 	return &MessageStore{db}
 }
 
-func (ms *MessageStore) GetAll(chatId int64) ([]models.Message, error){
-	return []models.Message{}, fmt.Errorf("")
-}
-
-func (ms *MessageStore) Create(message models.Message) error{
-	return fmt.Errorf("")
+func (ms *MessageStore) Create(message models.Message) (int64, error) {
+	return 0, fmt.Errorf("")
 }

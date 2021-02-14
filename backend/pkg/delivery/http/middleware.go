@@ -1,46 +1,48 @@
 package http
 
 import (
+	"context"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 var (
-	authHeader = "Authorization"
+	authHeader   = "Authorization"
 	userIdHeader = "UserId"
 )
 
-
-func AuthChecker(handlerFunc http.HandlerFunc) http.HandlerFunc {
+func (h Handler) AuthChecker(handlerFunc http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get(authHeader)
 
-		if header == ""{
-			WriteErrorResponse(w, err)
+		if header == "" {
+			WriteUnauthorizedResponse(w, "auth header is empty")
 			return
 		}
-		//token, err := jwt.Parse(utils.AuthKey, func(token *jwt.Token) (interface{}, error) {
-		//	return utils.AuthKey, nil
-		//})
-		//if err != nil {
-		//	w.WriteHeader(http.StatusUnauthorized)
-		//	return
-		//}
-		//
-		//var newReq *http.Request
-		//if token.Valid {
-		//	b := store.CheckUserData(token.Claims["login"], token.Claims)
-		//	if !b {
-		//		w.WriteHeader(http.StatusUnauthorized)
-		//		return
-		//	}
-		//	newReq = r.WithContext(context.WithValue(r.Context(), "user", map[string]string{
-		//		"login":    claims.Login,
-		//		"password": claims.Password,
-		//	}))
-		//} else {
-		//	w.WriteHeader(http.StatusUnauthorized)
-		//	return
-		//}
-		//handlerFunc(w, newReq)
+
+		headerParts := strings.Split(header, " ")
+
+		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+			WriteUnauthorizedResponse(w, "invalid auth header")
+			return
+		}
+
+		if headerParts[1] == "" {
+			WriteUnauthorizedResponse(w, "token is empty")
+			return
+		}
+
+		id, err := h.tokenService.ParseToken(headerParts[1])
+		if err != nil {
+			WriteUnauthorizedResponse(w, err.Error())
+			return
+		}
+
+		var newReq *http.Request
+		newReq = r.WithContext(context.WithValue(r.Context(), "user", map[string]string{
+			userIdHeader: strconv.FormatInt(id, 10),
+		}))
+		handlerFunc(w, newReq)
 	}
 }

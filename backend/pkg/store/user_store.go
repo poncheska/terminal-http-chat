@@ -14,10 +14,10 @@ func NewUserStore(db *sqlx.DB) *UserStore {
 	return &UserStore{db}
 }
 
-func (us *UserStore) GetByCredentials(login, password string) (models.User, error){
-	return models.User{},fmt.Errorf("")
+func (us *UserStore) GetByCredentials(username, password string) (models.User, error) {
+	return models.User{}, fmt.Errorf("")
 }
 
-func (us *UserStore) Create(login, password string) error{
-	return fmt.Errorf("")
+func (us *UserStore) Create(username, password string) (int64, error) {
+	return 0, fmt.Errorf("")
 }

@@ -8,21 +8,21 @@ import (
 	"net/http"
 )
 
-type Server struct {
-	store         *store.Store
-	chatNotifiers map[string]utils.ChatNotifier
-	tokenService  *utils.TokenService
+type Handler struct {
+	store        *store.Store
+	chatNotifier *utils.ChatNotifier
+	tokenService *utils.TokenService
 }
 
 type JSONError struct {
-	Msg string `json:"error"`
+	Msg string `json:"message"`
 }
 
-func NewServer(db *sqlx.DB, jwtKey string) Server {
-	return Server{
-		store:         store.NewStore(db),
-		chatNotifiers: map[string]utils.ChatNotifier{},
-		tokenService:  utils.NewTokenService(jwtKey),
+func NewServer(db *sqlx.DB, jwtKey string) Handler {
+	return Handler{
+		store:        store.NewStore(db),
+		chatNotifier: utils.NewChatNotifier(),
+		tokenService: utils.NewTokenService(jwtKey),
 	}
 }
 
@@ -34,4 +34,10 @@ func WriteErrorResponse(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusBadRequest)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(JSONError{err.Error()})
+}
+
+func WriteUnauthorizedResponse(w http.ResponseWriter, msg string){
+	w.WriteHeader(http.StatusUnauthorized)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(JSONError{msg})
 }

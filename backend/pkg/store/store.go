@@ -9,21 +9,26 @@ type Store struct {
 	Chat
 	Message
 	User
+	View
 }
 
 type Message interface {
-	GetAll(chatId int64) ([]models.Message, error)
-	Create(message models.Message) error
+	Create(message models.Message) (int64, error)
 }
 
 type Chat interface {
 	GetAll() ([]models.Chat, error)
-	Create(chat models.Chat) error
+	Create(chat models.Chat) (int64, error)
 }
 
 type User interface {
-	GetByCredentials(login, password string) (models.User, error)
-	Create(login, password string) error
+	GetByCredentials(username, password string) (models.User, error)
+	Create(username, password string) (int64, error)
+}
+
+type View interface {
+	GetAllMessageData(chatId int64) ([]models.MessageData, error)
+	GetMessageDataById(msgId int64) (models.MessageData, error)
 }
 
 func NewStore(db *sqlx.DB) *Store {
@@ -31,5 +36,6 @@ func NewStore(db *sqlx.DB) *Store {
 		Chat:    NewChatStore(db),
 		Message: NewMessageStore(db),
 		User:    NewUserStore(db),
+		View:    NewViewStore(db),
 	}
 }

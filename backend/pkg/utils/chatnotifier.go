@@ -3,39 +3,58 @@ package utils
 import (
 	"fmt"
 	"github.com/poncheska/terminal-http-chat/backend/pkg/models"
+	"sync"
 )
 
 type ChatNotifier struct {
-	MemberChannels []MemberChannel
+	mutex *sync.Mutex
+	MemberChannels map[int64][]MemberChannel
 }
 
 type MemberChannel struct {
 	MemberId int64
-	Chan     chan models.Message
+	Chan     chan models.MessageData
 }
 
-func (cn *ChatNotifier) Subscribe(memberId int64) (chan models.Message, error) {
-	for _, v := range cn.MemberChannels {
+func NewChatNotifier() *ChatNotifier{
+	return &ChatNotifier{
+		mutex: &sync.Mutex{},
+		MemberChannels: map[int64][]MemberChannel{},
+	}
+}
+
+func (cn *ChatNotifier) Subscribe(memberId, chatId int64) (chan models.MessageData, error) {
+	cn.mutex.Lock()
+	defer cn.mutex.Unlock()
+
+	for _, v := range cn.MemberChannels[chatId] {
 		if v.MemberId == memberId {
 			return nil, fmt.Errorf("user already subscribed this chat")
 		}
 	}
-	ch := make(chan models.Message)
+	ch := make(chan models.MessageData)
 	mc := MemberChannel{memberId, ch}
-	cn.MemberChannels = append(cn.MemberChannels, mc)
+	cn.MemberChannels[chatId] = append(cn.MemberChannels[chatId], mc)
 	return ch, nil
 }
 
-func (cn *ChatNotifier) Unsubscribe(memberId int64) {
+func (cn *ChatNotifier) Unsubscribe(memberId, chatId int64) {
+	cn.mutex.Lock()
+	defer cn.mutex.Unlock()
+
 	for i, v := range cn.MemberChannels {
-		if v.MemberId == memberId {
-			cn.MemberChannels = append(cn.MemberChannels[:i], cn.MemberChannels[i+1:]...)
+		if v[chatId].MemberId == memberId {
+			close(cn.MemberChannels[chatId][i].Chan)
+			cn.MemberChannels[chatId] = append(cn.MemberChannels[chatId][:i], cn.MemberChannels[chatId][i+1:]...)
 		}
 	}
 }
 
-func (cn *ChatNotifier) Notify(m models.Message){
-	for _, v := range cn.MemberChannels{
+func (cn *ChatNotifier) Notify(chatId int64, m models.MessageData){
+	cn.mutex.Lock()
+	defer cn.mutex.Unlock()
+
+	for _, v := range cn.MemberChannels[chatId]{
 		v.Chan <- m
 	}
 }
