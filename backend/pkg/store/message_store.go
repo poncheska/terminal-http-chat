@@ -1,16 +1,16 @@
 package store
 
 import (
-"fmt"
+	"fmt"
 "github.com/jmoiron/sqlx"
-"github.com/poncheska/terminal-http-chat/backend/models"
+	"github.com/poncheska/terminal-http-chat/backend/pkg/models"
 )
 
 type MessageStore struct {
 	db *sqlx.DB
 }
 
-func NewMessageStore(db *sqlx.DB) *MessageStore{
+func NewMessageStore(db *sqlx.DB) *MessageStore {
 	return &MessageStore{db}
 }
 

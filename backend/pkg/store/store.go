@@ -2,7 +2,7 @@ package store
 
 import (
 	"github.com/jmoiron/sqlx"
-	"github.com/poncheska/terminal-http-chat/backend/models"
+	"github.com/poncheska/terminal-http-chat/backend/pkg/models"
 )
 
 type Store struct {
@@ -22,14 +22,14 @@ type Chat interface {
 }
 
 type User interface {
-	GetById(userId int64) (models.User, error)
+	GetByCredentials(login, password string) (models.User, error)
 	Create(login, password string) error
 }
 
 func NewStore(db *sqlx.DB) *Store {
 	return &Store{
-		Chat: NewChatStore(db),
+		Chat:    NewChatStore(db),
 		Message: NewMessageStore(db),
-		User: NewUserStore(db),
+		User:    NewUserStore(db),
 	}
 }

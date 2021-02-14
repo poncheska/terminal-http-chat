@@ -3,14 +3,14 @@ package store
 import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
-	"github.com/poncheska/terminal-http-chat/backend/models"
+	"github.com/poncheska/terminal-http-chat/backend/pkg/models"
 )
 
 type ChatStore struct {
 	db *sqlx.DB
 }
 
-func NewChatStore(db *sqlx.DB) *ChatStore{
+func NewChatStore(db *sqlx.DB) *ChatStore {
 	return &ChatStore{db}
 }
 

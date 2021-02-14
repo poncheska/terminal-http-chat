@@ -1,19 +1,23 @@
-package server
+package http
 
 import (
-	"github.com/dgrijalva/jwt-go"
 	"net/http"
 )
 
+var (
+	authHeader = "Authorization"
+	userIdHeader = "UserId"
+)
 
-type AuthData struct {
-	Login    string `json:"login"`
-	Password string `json:"password"`
-	jwt.StandardClaims
-}
 
 func AuthChecker(handlerFunc http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		header := r.Header.Get(authHeader)
+
+		if header == ""{
+			WriteErrorResponse(w, err)
+			return
+		}
 		//token, err := jwt.Parse(utils.AuthKey, func(token *jwt.Token) (interface{}, error) {
 		//	return utils.AuthKey, nil
 		//})

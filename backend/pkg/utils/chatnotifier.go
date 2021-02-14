@@ -2,7 +2,7 @@ package utils
 
 import (
 	"fmt"
-	"terminal-http-chat/server/models"
+	"github.com/poncheska/terminal-http-chat/backend/pkg/models"
 )
 
 type ChatNotifier struct {

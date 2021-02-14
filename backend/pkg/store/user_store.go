@@ -3,18 +3,18 @@ package store
 import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
-	"github.com/poncheska/terminal-http-chat/backend/models"
+	"github.com/poncheska/terminal-http-chat/backend/pkg/models"
 )
 
 type UserStore struct {
 	db *sqlx.DB
 }
 
-func NewUserStore(db *sqlx.DB) *UserStore{
+func NewUserStore(db *sqlx.DB) *UserStore {
 	return &UserStore{db}
 }
 
-func (us *UserStore) GetById(userId int64) (models.User, error){
+func (us *UserStore) GetByCredentials(login, password string) (models.User, error){
 	return models.User{},fmt.Errorf("")
 }
 
