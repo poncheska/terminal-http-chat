@@ -1,9 +1,10 @@
-version: '1.0'
+# docker-compose.yml
+version: '3.5'
 
 services:
-  chat-app:
+  chat-api:
     build: ./
-    command: ./wait-for-postgres.sh db ./app
+    command: [ "./wait-for-postgres.sh", "db", "./api" ]
     ports:
       - 8000:8000
     depends_on:
@@ -14,8 +15,6 @@ services:
   db:
     restart: always
     image: postgres:latest
-    volumes:
-      - ./.database/postgres/data:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=password
     ports:
