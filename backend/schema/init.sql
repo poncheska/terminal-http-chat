@@ -16,7 +16,7 @@ CREATE TABLE message
     id SERIAL NOT NULL PRIMARY KEY ,
     user_id INT REFERENCES users(id) NOT NULL ,
     chat_id INT REFERENCES chat(id) NOT NULL ,
-    date DATE NOT NULL ,
+    date TIMESTAMP NOT NULL ,
     text TEXT NOT NULL
 );
 
