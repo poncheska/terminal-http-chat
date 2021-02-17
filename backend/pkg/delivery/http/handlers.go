@@ -16,6 +16,10 @@ type AuthData struct {
 	Password string `json:"password"`
 }
 
+type CreateChatReq struct {
+	ChatName string `json:"chat_name"`
+}
+
 func (h Handler) Chat(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	chatId, err:= strconv.ParseInt(vars["id"],10,64)
@@ -171,4 +175,46 @@ func (h Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
+}
+
+func (h Handler) CreateChat(w http.ResponseWriter, r *http.Request) {
+	userId, err:= strconv.ParseInt(r.Header.Get(userIdHeader),10,64)
+	if err != nil {
+		WriteErrorResponse(w, err)
+		return
+	}
+	var ccr CreateChatReq
+	err = json.NewDecoder(r.Body).Decode(&ccr)
+	if err != nil {
+		WriteErrorResponse(w, err)
+		return
+	}
+	chat := models.Chat{
+		Name: ccr.ChatName,
+		AdminId: userId,
+	}
+	_, err = h.store.Chat.Create(chat)
+	if err != nil {
+		WriteErrorResponse(w, err)
+		return
+	}
+}
+
+func (h Handler) DeleteChat(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	chatId, err:= strconv.ParseInt(vars["id"],10,64)
+	if err != nil {
+		WriteErrorResponse(w, err)
+		return
+	}
+	userId, err:= strconv.ParseInt(r.Header.Get(userIdHeader),10,64)
+	if err != nil {
+		WriteErrorResponse(w, err)
+		return
+	}
+	err = h.store.Chat.Delete(chatId, userId)
+	if err != nil {
+		WriteErrorResponse(w, err)
+		return
+	}
 }

@@ -28,6 +28,8 @@ func Run(){
 	r.HandleFunc("/signup", srv.SignUp)
 	r.HandleFunc("/chats", srv.AuthChecker(srv.Chats))
 	r.HandleFunc("/chat/{id:[0-9]+}", srv.AuthChecker(srv.Chat))
+	r.HandleFunc("/chat/{id:[0-9]+}/delete", srv.AuthChecker(srv.CreateChat))
+	r.HandleFunc("/chat/create", srv.AuthChecker(srv.Chat))
 	log.Println("Handler started")
 	log.Fatal(http.ListenAndServe(":"+port, r))
 }
