@@ -5,6 +5,7 @@ import "time"
 type Chat struct {
 	Id   int64  `json:"id" ,db:"id"`
 	Name string `json:"name" ,db:"name"`
+	AdminId int64 `json:"admin" ,db:"admin"`
 }
 
 type Message struct {

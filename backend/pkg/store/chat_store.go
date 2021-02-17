@@ -23,9 +23,17 @@ func (cs *ChatStore) GetAll() ([]models.Chat, error) {
 }
 
 func (cs *ChatStore) Create(chat models.Chat) (int64, error) {
-	res, err := cs.db.Exec("INSERT INTO chat(name) VALUES ($1,$2) RETURNING id", chat.Name)
+	res, err := cs.db.Exec("INSERT INTO chat(name, admin_id) VALUES ($1,$2) RETURNING id", chat.Name, chat.AdminId)
 	if err != nil {
 		return 0, err
 	}
 	return res.LastInsertId()
+}
+
+func (cs *ChatStore) Delete(chatId, adminId int64) error {
+	_, err := cs.db.Exec("DELETE FROM chat WHERE id = $1 AND admin_id = $2", chatId, adminId)
+	if err != nil {
+		return err
+	}
+	return nil
 }

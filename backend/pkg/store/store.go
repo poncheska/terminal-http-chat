@@ -19,6 +19,7 @@ type Message interface {
 type Chat interface {
 	GetAll() ([]models.Chat, error)
 	Create(chat models.Chat) (int64, error)
+	Delete(chatId, adminId int64) error
 }
 
 type User interface {
