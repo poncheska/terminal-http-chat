@@ -1,7 +1,6 @@
 package store
 
 import (
-	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/poncheska/terminal-http-chat/backend/pkg/models"
 )
@@ -15,5 +14,11 @@ func NewMessageStore(db *sqlx.DB) *MessageStore {
 }
 
 func (ms *MessageStore) Create(message models.Message) (int64, error) {
-	return 0, fmt.Errorf("")
+	res, err := ms.db.Exec(
+		"INSERT INTO message(user_id, chat_id, date, text) VALUES ($1,$2,$3,$4) RETURNING id",
+		message.SenderId, message.ChatId, message.Date, message.Text)
+	if err != nil {
+		return 0, err
+	}
+	return res.LastInsertId()
 }

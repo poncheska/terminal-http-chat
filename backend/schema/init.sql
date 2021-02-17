@@ -22,6 +22,7 @@ CREATE TABLE message
 
 CREATE VIEW message_data AS
     SELECT u.name AS name, m.date AS date,
-           m.text AS text, m.chat_id AS chat_id
+           m.text AS text, m.chat_id AS chat_id,
+           m.id AS id
     FROM message m
     JOIN users u on m.user_id = u.id;

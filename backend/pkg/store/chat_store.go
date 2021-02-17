@@ -1,7 +1,6 @@
 package store
 
 import (
-	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/poncheska/terminal-http-chat/backend/pkg/models"
 )
@@ -15,9 +14,18 @@ func NewChatStore(db *sqlx.DB) *ChatStore {
 }
 
 func (cs *ChatStore) GetAll() ([]models.Chat, error) {
-	return []models.Chat{}, fmt.Errorf("")
+	var chat []models.Chat
+	err := cs.db.Get(&chat, "SELECT * FROM chat")
+	if err != nil {
+		return []models.Chat{}, err
+	}
+	return chat, nil
 }
 
 func (cs *ChatStore) Create(chat models.Chat) (int64, error) {
-	return 0, fmt.Errorf("")
+	res, err := cs.db.Exec("INSERT INTO chat(name) VALUES ($1,$2) RETURNING id", chat.Name)
+	if err != nil {
+		return 0, err
+	}
+	return res.LastInsertId()
 }
