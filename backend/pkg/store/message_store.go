@@ -14,11 +14,12 @@ func NewMessageStore(db *sqlx.DB) *MessageStore {
 }
 
 func (ms *MessageStore) Create(message models.Message) (int64, error) {
-	res, err := ms.db.Exec(
+	var id int64
+	err := ms.db.QueryRow(
 		"INSERT INTO message(user_id, chat_id, date, text) VALUES ($1,$2,$3,$4) RETURNING id",
-		message.SenderId, message.ChatId, message.Date, message.Text)
+		message.SenderId, message.ChatId, message.Date, message.Text).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
-	return res.LastInsertId()
+	return id, nil
 }

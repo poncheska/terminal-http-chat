@@ -6,13 +6,18 @@ COPY . /github.com/poncheska/terminal-http-chat/backend/
 WORKDIR /github.com/poncheska/terminal-http-chat/backend/
 
 RUN go mod download
-RUN GOOS=linux go build -o ./.bin/api ./cmd/api/main.go
+RUN GOOS=linux CGO_ENABLED=0 go build -o ./.bin/api ./cmd/api/main.go
 
 FROM alpine:latest
 
-COPY wait-for-postgres.sh wait-for-postgres.sh
-COPY --from=0 /github.com/poncheska/terminal-http-chat/backend/.bin/api api
+RUN mkdir /app
+WORKDIR /app
 
-RUN chmod +x wait-for-postgres.sh
+COPY --from=builder /github.com/poncheska/terminal-http-chat/backend/.bin/api .
 
-CMD ["./api"]
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.7.3/wait /wait
+RUN chmod +x /wait
+
+EXPOSE 8080
+
+CMD /wait && ./api

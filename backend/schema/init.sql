@@ -1,20 +1,20 @@
 CREATE TABLE users
 (
-    id       SERIAL       NOT NULL PRIMARY KEY,
+    id       SERIAL       PRIMARY KEY,
     name     VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE chat
 (
-    id       SERIAL                    NOT NULL PRIMARY KEY,
+    id       SERIAL                    PRIMARY KEY,
     admin_id INT REFERENCES users (id) NOT NULL,
     name     VARCHAR(255)              NOT NULL
 );
 
 CREATE TABLE message
 (
-    id      SERIAL                    NOT NULL PRIMARY KEY,
+    id      SERIAL                    PRIMARY KEY,
     user_id INT REFERENCES users (id) NOT NULL,
     chat_id INT REFERENCES chat (id)  NOT NULL,
     date    TIMESTAMP                 NOT NULL,

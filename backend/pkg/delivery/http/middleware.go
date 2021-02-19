@@ -1,7 +1,7 @@
 package http
 
 import (
-	"context"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -39,10 +39,9 @@ func (h Handler) AuthChecker(handlerFunc http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		var newReq *http.Request
-		newReq = r.WithContext(context.WithValue(r.Context(), "user", map[string]string{
-			userIdHeader: strconv.FormatInt(id, 10),
-		}))
-		handlerFunc(w, newReq)
+		log.Printf("user: %v authorized", id)
+
+		r.Header.Set(userIdHeader, strconv.FormatInt(id, 10))
+		handlerFunc(w, r)
 	}
 }

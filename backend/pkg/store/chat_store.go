@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/poncheska/terminal-http-chat/backend/pkg/models"
 )
@@ -14,26 +15,33 @@ func NewChatStore(db *sqlx.DB) *ChatStore {
 }
 
 func (cs *ChatStore) GetAll() ([]models.Chat, error) {
-	var chat []models.Chat
-	err := cs.db.Get(&chat, "SELECT * FROM chat")
+	var chats []models.Chat
+	err := cs.db.Select(&chats, "SELECT * FROM chat")
 	if err != nil {
 		return []models.Chat{}, err
 	}
-	return chat, nil
+	return chats, nil
 }
 
 func (cs *ChatStore) Create(chat models.Chat) (int64, error) {
-	res, err := cs.db.Exec("INSERT INTO chat(name, admin_id) VALUES ($1,$2) RETURNING id", chat.Name, chat.AdminId)
+	var id int64
+	err := cs.db.QueryRow("INSERT INTO chat(name, admin_id) VALUES ($1,$2) RETURNING id",
+		chat.Name, chat.AdminId).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
-	return res.LastInsertId()
+	return id, nil
 }
 
 func (cs *ChatStore) Delete(chatId, adminId int64) error {
-	_, err := cs.db.Exec("DELETE FROM chat WHERE id = $1 AND admin_id = $2", chatId, adminId)
+	res, err := cs.db.Exec("DELETE FROM chat WHERE id = $1 AND admin_id = $2", chatId, adminId)
 	if err != nil {
 		return err
+	}
+	if ra, err := res.RowsAffected(); err != nil {
+		return err
+	}else if ra == 0{
+		return fmt.Errorf("chat have not deleted, may be you are not admin")
 	}
 	return nil
 }

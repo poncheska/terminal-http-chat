@@ -1,8 +1,10 @@
 package app
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	http2 "github.com/poncheska/terminal-http-chat/backend/pkg/delivery/http"
 	"log"
 	"net/http"
@@ -12,7 +14,18 @@ import (
 var jwtKey = "gdfgdfg"
 
 func Run(){
-	db, err := sqlx.Connect("postgres","user=admin password=password sslmode=disable")
+	host := os.Getenv("POSTGRES_HOST")
+	if host == ""{
+		host = "127.0.0.1"
+	}
+
+	connStr := fmt.Sprintf("postgres://%v:%v@%v:%v?sslmode=%v",
+		"postgres",
+		"password",
+		host,
+		"5432",
+		"disable")
+	db, err := sqlx.Connect("postgres",connStr)
 	if err != nil{
 		log.Fatal(err)
 	}
@@ -28,8 +41,8 @@ func Run(){
 	r.HandleFunc("/signup", srv.SignUp)
 	r.HandleFunc("/chats", srv.AuthChecker(srv.Chats))
 	r.HandleFunc("/chat/{id:[0-9]+}", srv.AuthChecker(srv.Chat))
-	r.HandleFunc("/chat/{id:[0-9]+}/delete", srv.AuthChecker(srv.CreateChat))
-	r.HandleFunc("/chat/create", srv.AuthChecker(srv.Chat))
-	log.Println("Handler started")
+	r.HandleFunc("/chat/{id:[0-9]+}/delete", srv.AuthChecker(srv.DeleteChat))
+	r.HandleFunc("/chat/create", srv.AuthChecker(srv.CreateChat))
+	log.Println("Server started")
 	log.Fatal(http.ListenAndServe(":"+port, r))
 }

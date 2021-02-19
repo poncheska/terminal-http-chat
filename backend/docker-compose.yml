@@ -4,17 +4,20 @@ version: '3.5'
 services:
   chat-api:
     build: ./
-    command: [ "./wait-for-postgres.sh", "db", "./api" ]
     ports:
-      - 8000:8000
+      - 8080:8080
     depends_on:
-      - db
+      - postgres
     environment:
-      - DB_PASSWORD=password
+      - WAIT_HOSTS=postgres:5432
+      - POSTGRES_HOST=postgres
 
-  db:
+  postgres:
     restart: always
+    hostname: postgres
     image: postgres:latest
+    volumes:
+      - ./schema/init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       - POSTGRES_PASSWORD=password
     ports:

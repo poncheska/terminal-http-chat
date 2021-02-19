@@ -14,7 +14,7 @@ func NewUserStore(db *sqlx.DB) *UserStore {
 }
 
 func (us *UserStore) GetByCredentials(username, password string) (models.User, error) {
-	var user models.User
+	user := models.User{}
 	err := us.db.Get(&user, "SELECT * FROM users WHERE name = $1 AND password = $2", username, password)
 	if err != nil {
 		return models.User{}, err
@@ -24,9 +24,11 @@ func (us *UserStore) GetByCredentials(username, password string) (models.User, e
 }
 
 func (us *UserStore) Create(username, password string) (int64, error) {
-	res, err := us.db.Exec("INSERT INTO users(name,password) VALUES ($1,$2) RETURNING id", username, password)
+	var id int64
+	err := us.db.QueryRow("INSERT INTO users(name,password) VALUES ($1,$2) RETURNING id",
+		username, password).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
-	return res.LastInsertId()
+	return id, nil
 }

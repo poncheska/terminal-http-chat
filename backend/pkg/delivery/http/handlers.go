@@ -129,22 +129,30 @@ func (h Handler) SignIn(w http.ResponseWriter, r *http.Request) {
 	data := &AuthData{}
 	err := json.NewDecoder(r.Body).Decode(data)
 	if err != nil {
+		log.Println("signin: response decode error")
 		WriteErrorResponse(w, err)
 		return
 	}
 
 	user, err := h.store.User.GetByCredentials(data.Username, data.Password)
 	if err != nil {
+		log.Println("signin: store error")
 		WriteErrorResponse(w, err)
 		return
 	}
 
 	token, err := h.tokenService.CreateToken(user.Id)
+	if err != nil {
+		log.Println("signin: token create error")
+		WriteErrorResponse(w, err)
+		return
+	}
 
 	err = json.NewEncoder(w).Encode(map[string]string{
 		"token": token,
 	})
 	if err != nil {
+		log.Println("signin: response encode error")
 		WriteErrorResponse(w, err)
 		return
 	}
@@ -166,6 +174,10 @@ func (h Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token, err := h.tokenService.CreateToken(id)
+	if err != nil {
+		WriteErrorResponse(w, err)
+		return
+	}
 
 	err = json.NewEncoder(w).Encode(map[string]string{
 		"token": token,
@@ -178,8 +190,10 @@ func (h Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) CreateChat(w http.ResponseWriter, r *http.Request) {
+	//TODO empty chat_name checker
 	userId, err:= strconv.ParseInt(r.Header.Get(userIdHeader),10,64)
 	if err != nil {
+		log.Printf(r.Header.Get(userIdHeader))
 		WriteErrorResponse(w, err)
 		return
 	}
