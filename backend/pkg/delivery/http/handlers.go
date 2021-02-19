@@ -11,29 +11,23 @@ import (
 	"time"
 )
 
-type AuthData struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type CreateChatReq struct {
-	ChatName string `json:"chat_name"`
-}
-
 func (h Handler) Chat(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	chatId, err:= strconv.ParseInt(vars["id"],10,64)
 	if err != nil {
+		log.Println("chat: " + err.Error())
 		WriteErrorResponse(w, err)
 		return
 	}
 	userId, err:= strconv.ParseInt(r.Header.Get(userIdHeader),10,64)
 	if err != nil {
+		log.Println("chat: " + err.Error())
 		WriteErrorResponse(w, err)
 		return
 	}
 	msgs, err := h.store.View.GetAllMessageData(chatId)
 	if err != nil {
+		log.Println("chat: store error: " + err.Error())
 		WriteErrorResponse(w, err)
 		return
 	}
@@ -42,8 +36,8 @@ func (h Handler) Chat(w http.ResponseWriter, r *http.Request) {
 		WriteBufferSize: 1024,
 	}
 	conn, err := upgrader.Upgrade(w,r,nil)
-
 	if err != nil {
+		log.Println("chat: socket upgrader error: " + err.Error())
 		WriteErrorResponse(w, err)
 		return
 	}
@@ -113,12 +107,14 @@ func (h Handler) ChatStream(conn *websocket.Conn, userId, chatId int64){
 func (h Handler) Chats(w http.ResponseWriter, r *http.Request) {
 	chats, err := h.store.Chat.GetAll()
 	if err != nil {
+		log.Println("chats: store error: " + err.Error())
 		WriteErrorResponse(w, err)
 		return
 	}
 
 	err = json.NewEncoder(w).Encode(chats)
 	if err != nil{
+		log.Println("chats: response encode error: " + err.Error())
 		WriteErrorResponse(w, err)
 		return
 	}
@@ -127,23 +123,27 @@ func (h Handler) Chats(w http.ResponseWriter, r *http.Request) {
 
 func (h Handler) SignIn(w http.ResponseWriter, r *http.Request) {
 	data := &AuthData{}
-	err := json.NewDecoder(r.Body).Decode(data)
-	if err != nil {
-		log.Println("signin: response decode error")
+	if err := json.NewDecoder(r.Body).Decode(data); err != nil {
+		log.Println("signin: request decode error: " + err.Error())
+		WriteErrorResponse(w, err)
+		return
+	}
+	if err := data.CheckNotEmpty(); err != nil{
+		log.Println("signin: " + err.Error())
 		WriteErrorResponse(w, err)
 		return
 	}
 
 	user, err := h.store.User.GetByCredentials(data.Username, data.Password)
 	if err != nil {
-		log.Println("signin: store error")
+		log.Println("signin: store error: " + err.Error())
 		WriteErrorResponse(w, err)
 		return
 	}
 
 	token, err := h.tokenService.CreateToken(user.Id)
 	if err != nil {
-		log.Println("signin: token create error")
+		log.Println("signin: token create error: " + err.Error())
 		WriteErrorResponse(w, err)
 		return
 	}
@@ -152,7 +152,7 @@ func (h Handler) SignIn(w http.ResponseWriter, r *http.Request) {
 		"token": token,
 	})
 	if err != nil {
-		log.Println("signin: response encode error")
+		log.Println("signin: response encode error: " + err.Error())
 		WriteErrorResponse(w, err)
 		return
 	}
@@ -163,52 +163,66 @@ func (h Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	data := &AuthData{}
 	err := json.NewDecoder(r.Body).Decode(data)
 	if err != nil {
+		log.Println("signup: request decode error: " + err.Error())
+		WriteErrorResponse(w, err)
+		return
+	}
+	if err := data.CheckNotEmpty(); err != nil{
+		log.Println("signup: " + err.Error())
 		WriteErrorResponse(w, err)
 		return
 	}
 
-	id, err := h.store.User.Create(data.Username, data.Password)
+	_, err = h.store.User.Create(data.Username, data.Password)
 	if err != nil {
+		log.Println("signup: store error: " + err.Error())
 		WriteErrorResponse(w, err)
 		return
 	}
 
-	token, err := h.tokenService.CreateToken(id)
-	if err != nil {
-		WriteErrorResponse(w, err)
-		return
-	}
-
-	err = json.NewEncoder(w).Encode(map[string]string{
-		"token": token,
-	})
-	if err != nil {
-		WriteErrorResponse(w, err)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
+	//token, err := h.tokenService.CreateToken(id)
+	//if err != nil {
+	//	WriteErrorResponse(w, err)
+	//	return
+	//}
+	//
+	//err = json.NewEncoder(w).Encode(map[string]string{
+	//	"token": token,
+	//})
+	//if err != nil {
+	//	WriteErrorResponse(w, err)
+	//	return
+	//}
+	//w.Header().Set("Content-Type", "application/json")
 }
 
 func (h Handler) CreateChat(w http.ResponseWriter, r *http.Request) {
-	//TODO empty chat_name checker
 	userId, err:= strconv.ParseInt(r.Header.Get(userIdHeader),10,64)
 	if err != nil {
-		log.Printf(r.Header.Get(userIdHeader))
+		log.Println("create_chat: " + err.Error())
 		WriteErrorResponse(w, err)
 		return
 	}
+
 	var ccr CreateChatReq
-	err = json.NewDecoder(r.Body).Decode(&ccr)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&ccr); err != nil {
+		log.Println("create_chat: request decode error: " + err.Error())
 		WriteErrorResponse(w, err)
 		return
 	}
+	if err := ccr.CheckNotEmpty(); err != nil{
+		log.Println("create_chat: " + err.Error())
+		WriteErrorResponse(w, err)
+		return
+	}
+
 	chat := models.Chat{
 		Name: ccr.ChatName,
 		AdminId: userId,
 	}
 	_, err = h.store.Chat.Create(chat)
 	if err != nil {
+		log.Println("create_chat: store error: " + err.Error())
 		WriteErrorResponse(w, err)
 		return
 	}
@@ -218,16 +232,18 @@ func (h Handler) DeleteChat(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	chatId, err:= strconv.ParseInt(vars["id"],10,64)
 	if err != nil {
-		WriteErrorResponse(w, err)
+		log.Println("delete_chat: " + err.Error())
 		return
 	}
 	userId, err:= strconv.ParseInt(r.Header.Get(userIdHeader),10,64)
 	if err != nil {
+		log.Println("delete_chat: " + err.Error())
 		WriteErrorResponse(w, err)
 		return
 	}
 	err = h.store.Chat.Delete(chatId, userId)
 	if err != nil {
+		log.Println("delete_chat: store error: " + err.Error())
 		WriteErrorResponse(w, err)
 		return
 	}
